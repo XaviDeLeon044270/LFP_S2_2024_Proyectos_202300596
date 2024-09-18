@@ -1,0 +1,45 @@
+grafica: {
+    nombre:"nombre de grafico";
+    continente {
+    nombre: "Asia";
+        pais: {
+        nombre: "Japon";
+        poblacion: 2352342;
+        saturacion:80%;
+        bandera: "C:\Users\Admin\Desktop\LFP_S2_2024_Proyecto1_202300596\banderas\jp.png";
+        }
+        pais: {
+        bandera: "C:\Users\Admin\Desktop\LFP_S2_2024_Proyecto1_202300596\banderas\cn.png";
+        nombre: "China";
+        poblacion: #1350000000;
+        saturacion:95%;
+        }
+        pais: {
+        saturacion:40%;
+        poblacion: 2352342;
+        nombre:"Korea";
+        bandera: "C:\Users\Admin\Desktop\LFP_S2_2024_Proyecto1_202300596\banderas\kr.png";
+        }
+    }
+    continente {
+    nombre: "America";
+        pais: {
+        nombre: "Canada";
+        poblacion: 23423423;
+        saturacion:65%;
+        bandera: "C:\Users\HP\Desktop\Proyectos\Proyecto1\build\banderas\ca.png"
+        }
+        pais: {
+        poblacion: 17263239;
+        nombre: "Guatemala";
+        saturacion:40%;
+        bandera: "C:\Users\HP\Desktop\Proyectos\Proyecto1\build\banderas\gt.png"
+        }
+        pais: {
+        saturacion:60%;
+        nombre:"Chile";
+        poblacion: 235234234;
+        bandera: "C:\Users\HP\Desktop\Proyectos\Proyecto1\build\banderas\cl.png"
+        }
+    }
+}
