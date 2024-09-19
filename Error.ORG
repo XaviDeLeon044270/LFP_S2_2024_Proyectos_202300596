@@ -4,12 +4,12 @@ grafica:{
 	continente:{
 	nombre: "America del Norte";
 		pais:{
-		error#nombre:"Canada";
+		error#nombre:"Canada";		(1)*2
 			poblacion: 35295;
 			saturacion:75%;
 			bandera: "C:\banderas\ca.png";
 		}
-		errorpais:{
+		errorpais:{					(2)
 		nombre:"Mexico";
 			poblacion: 119713;
 			saturacion:35%;
@@ -26,17 +26,17 @@ grafica:{
 	nombre: "America del Sur";
 		pais:{
 			nombre:"Cabo verde";
-			poblacion: 35000;error$
+			poblacion: 35000;error$ (3)
 			saturacion:99%;
 			bandera: "C:\banderas\cv.png";
 		}
 	}
-!	continente:{
+!	continente:{					(4)
 	nombre: "Oceania";
 		pais:{
 			nombre:"Indonesia";
 			poblacion: 55000;
-			satUracion:74%;
+			satUracion:74%;			(5)*2
 			bandera: "C:\banderas\mc.png";
 		}
 	}

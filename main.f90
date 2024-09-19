@@ -7,7 +7,13 @@ program main
     character(len=100) :: lexema
     character(len=1), dimension(26) :: A
     character(len=1), dimension(5) :: S
+    integer, dimension(10) :: N
+    logical :: is_continente, is_pais
     character(len=1) :: char_error
+    character(len=50) :: nombre_continente, nombre_pais
+    integer :: poblacion
+    integer :: saturacion
+    character(len=100) :: bandera
 
     type :: ErrorInfo
         character(len=10) :: caracter  ! caracter
@@ -22,12 +28,28 @@ program main
         integer :: columna
         integer :: linea
     end type Token
+
+    type :: pais
+        character(len=100) :: nombre
+        integer :: poblacion
+        integer :: saturacion
+        character(len=100) :: bandera
+    end type pais
+
+    type :: continente
+        character(len=100) :: nombre
+        type(pais) :: pais
+        integer :: saturacion
+    end type continente
     
     type(ErrorInfo), dimension(250) :: errores
     type(Token), dimension(250) :: tokens
+    type(pais), dimension(250) :: paises
+    type(continente), dimension(250) :: continentes
 
     A = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
     S = [':', ';', '{', '}', '"']
+    N = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     estado = 0
     puntero = 1
@@ -37,6 +59,8 @@ program main
     numTokens = 0
     contenido = ''
     lexema = ''
+    is_continente = .false.
+    is_pais = .false.
 
     do
         read(*, '(A)', IOSTAT=ios) buffer
@@ -49,7 +73,7 @@ program main
 
     do while(puntero <= len)
         char = contenido(puntero:puntero)
-        print *, char
+        ! print *, char
 
         if(ichar(char) == 10) then
             columna = 1
@@ -85,7 +109,29 @@ program main
                         print *, "lexema: ", lexema
                         tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
                         estado = 1
-                    elseif (trim(lexema) /= '') then
+                    elseif (trim(lexema) == 'continente') then
+                        numTokens = numTokens + 1
+                        print *, "lexema: ", lexema
+                        tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
+                        is_continente = .true.
+                        estado = 1
+                    elseif (trim(lexema) == 'pais') then
+                        numTokens = numTokens + 1
+                        print *, "lexema: ", lexema
+                        tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
+                        is_pais = .true.
+                        estado = 1
+                    else if (trim(lexema) == 'poblacion') then
+                        numTokens = numTokens + 1
+                        print *, "lexema: ", lexema
+                        tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
+                        estado = 3
+                    else if (trim(lexema) == 'saturacion') then
+                        numTokens = numTokens + 1
+                        print *, "lexema: ", lexema
+                        tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
+                        estado = 4
+                    else
                         numErrores = numErrores + 1
                         print *, "lexema erroneo: ", lexema
                         errores(numErrores) = ErrorInfo(char, "Token no válido", columna_inicio, linea)
@@ -96,6 +142,7 @@ program main
                 else
                     numErrores = numErrores + 1
                     columna = columna + 1
+                    print *, "error: ", char
                     errores(numErrores) = ErrorInfo(char, "Caracter no perteneciente al alfabeto del lenguaje", columna, linea)
                 end if
                 puntero = puntero + 1
@@ -127,12 +174,14 @@ program main
                         estado = 0
                     else 
                         numErrores = numErrores + 1
+                        print *, "lexema erroneo: ", lexema
                         errores(numErrores) = ErrorInfo(char, "Token no válido", columna, linea)
                         estado = 1
                     end if
                     columna = columna + 1
                 else
                     numErrores = numErrores + 1
+                    print *, "error: ", char
                     errores(numErrores) = ErrorInfo(char, "Caracter no perteneciente al alfabeto del lenguaje", columna, linea)
                     columna = columna + 1
                     estado = 1
@@ -144,6 +193,14 @@ program main
                     numTokens = numTokens + 1
                     tokens(numTokens) = Token(lexema, "Cadena de texto", columna, linea)
                     print *, "lexema: ", lexema
+                    if (is_continente) then
+                        nombre_continente = trim(lexema)
+                        is_continente = .false.
+                    end if
+                    if (is_pais) then
+                        nombre_pais = trim(lexema)
+                        is_pais = .false.
+                    end if
                     estado = 1
                     columna = columna + 1
                 else
@@ -151,28 +208,24 @@ program main
                 end if
                 puntero = puntero + 1
             case(3)
-                if (any(char == A)) then
-                    columna = columna + 1
-                    estado = 3
+                if (any(ichar(char) - ichar('0') == N)) then
                     lexema = trim(lexema) // char
-                elseif (any(char == S)) then
                     columna = columna + 1
-                    estado = 4
-                    !almacenar token
-                    lexema = ''
+                elseif (any(char == S)) then
+                    numTokens = numTokens + 1
+                    tokens(numTokens) = Token(lexema, "Numero", columna, linea)
+                    print *, "lexema: ", lexema
+                    poblacion = atoi(lexema)
+                    estado = 1
+                    columna = columna + 1
                 else
                     numErrores = numErrores + 1
-                    errores(numErrores) = ErrorInfo(char, "Caracter no perteneciente al alfabeto del lenguaje", columna, linea)
+                    errores(numErrores) = ErrorInfo(char, "Token no válido", columna, linea)
+                    estado = 1
                     columna = columna + 1
-                    estado = 3
                 end if
                 puntero = puntero + 1
-            case(4)
-                if (any(char == S)) then
-                    columna = columna + 1
-                    estado = 5
-                end if
-                puntero = puntero + 1
+            
             end select
                     
         end if
@@ -250,5 +303,13 @@ function itoa(num) result(str)
 
     write(str, '(I0)') num  ! Convierte el entero 'num' a cadena
 end function itoa
+
+function atoi(str) result(num)
+    implicit none
+    character(len=*), intent(in) :: str
+    integer :: num
+
+    read(str, *) num  ! Convierte la cadena 'str' a entero
+end function atoi
 
 end program main
