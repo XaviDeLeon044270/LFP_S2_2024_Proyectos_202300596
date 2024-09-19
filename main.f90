@@ -13,7 +13,7 @@ program main
     integer :: poblacion
     integer :: saturacion_pais, saturacion_continente
     character(len=100) :: bandera
-    logical :: is_pais, is_continente, is_nombre
+    logical :: is_pais, is_continente, is_nombre, is_poblacion, is_saturacion
 
     type :: ErrorInfo
         character(len=10) :: caracter  ! caracter
@@ -64,6 +64,8 @@ program main
     is_pais = .false.
     is_continente = .false.
     is_nombre = .false.
+    is_poblacion = .false.
+    is_saturacion = .false.
 
     do
         read(*, '(A)', IOSTAT=ios) buffer
@@ -114,6 +116,20 @@ program main
                         tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
                         lexema = ''
                         estado = 1
+                    elseif (trim(lexema) == 'pais') then
+                        numTokens = numTokens + 1
+                        print *, "lexema: ", lexema
+                        is_pais = .true.
+                        tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
+                        lexema = ''
+                        estado = 1
+                    elseif (trim(lexema) == 'poblacion') then
+                        numTokens = numTokens + 1
+                        print *, "lexema: ", lexema
+                        is_poblacion = .true.
+                        tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
+                        lexema = ''
+                        estado = 1
                     !elseif (trim(lexema) /= '') then
                     !    numErrores = numErrores + 1
                     !    print *, "lexema erroneo: ", lexema
@@ -152,7 +168,16 @@ program main
                         print *, "lexema: ", lexema
                         tokens(numTokens) = Token(lexema, "Dos puntos", columna, linea)
                         lexema = ''
-                        estado = 1
+                        if (is_poblacion) then
+                            estado = 3
+                            is_poblacion = .false.
+                        elseif (is_saturacion) then
+                            estado = 4
+                            is_saturacion = .false.
+                        else
+                            estado = 1
+                        end if
+                        
                    elseif (trim(lexema) == '{') then
                         numTokens = numTokens + 1
                         print *, "lexema: ", lexema
