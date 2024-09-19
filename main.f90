@@ -4,16 +4,16 @@ program main
     character(len=10000) :: contenido, buffer
     character(len=10) :: str_codigo_ascii, str_columna, str_linea
     character(len=1) :: char
-    character(len=100) :: lexema
+    character(len=100), allocatable :: lexema
     character(len=1), dimension(26) :: A
     character(len=1), dimension(5) :: S
     integer, dimension(10) :: N
-    logical :: is_continente, is_pais
     character(len=1) :: char_error
     character(len=50) :: nombre_continente, nombre_pais
     integer :: poblacion
-    integer :: saturacion
+    integer :: saturacion_pais, saturacion_continente
     character(len=100) :: bandera
+    logical :: is_pais, is_continente, is_nombre
 
     type :: ErrorInfo
         character(len=10) :: caracter  ! caracter
@@ -29,28 +29,30 @@ program main
         integer :: linea
     end type Token
 
-    type :: pais
-        character(len=100) :: nombre
+    type :: Pais
+        character(len=100) :: nombre_pais
         integer :: poblacion
-        integer :: saturacion
+        character(len=3) :: saturacion_pais
         character(len=100) :: bandera
-    end type pais
+    end type Pais
 
-    type :: continente
-        character(len=100) :: nombre
-        type(pais) :: pais
-        integer :: saturacion
-    end type continente
-    
+    type (Pais), dimension(100) :: paises_continente
+
+    type :: Continente
+        character(len=100) :: nombre_continente
+        type(Pais), dimension(100) :: paises_continente
+        integer :: saturacion_continente
+    end type Continente
+
     type(ErrorInfo), dimension(250) :: errores
     type(Token), dimension(250) :: tokens
-    type(pais), dimension(250) :: paises
-    type(continente), dimension(250) :: continentes
+    type(Pais), dimension(250) :: paises
+    type(Continente), dimension(250) :: continentes
 
     A = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
     S = [':', ';', '{', '}', '"']
     N = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-
+    
     estado = 0
     puntero = 1
     columna = 1
@@ -59,35 +61,29 @@ program main
     numTokens = 0
     contenido = ''
     lexema = ''
-    is_continente = .false.
     is_pais = .false.
+    is_continente = .false.
+    is_nombre = .false.
 
     do
         read(*, '(A)', IOSTAT=ios) buffer
-        if (ios /= 0) exit 
-        contenido = trim(contenido) // trim(buffer) // new_line('a') ! concatenamos el 
+        if (ios /= 0) exit
+        contenido = trim(contenido) // trim(buffer) // new_line('a') ! concatenamos el
         !contenido mas lo que viene en el buffer y como leemos por el salto de linea al final
     end do
-
     len = len_trim(contenido)
-
     do while(puntero <= len)
         char = contenido(puntero:puntero)
-        ! print *, char
-
         if(ichar(char) == 10) then
             columna = 1
             linea = linea + 1
             puntero = puntero + 1
-
         elseif(ichar(char) == 9) then
             columna = columna + 4
             puntero = puntero + 1
-
-        elseif(ichar(char) == 32) then
+        elseif(ichar(char) == 32 .and. .not. is_nombre) then
             columna = columna + 1
             puntero = puntero + 1
-
         else
             select case (estado)
             case(0)
@@ -98,90 +94,87 @@ program main
                     estado = 0
                     columna = columna + 1
                     lexema = trim(lexema) // char
-                elseif (any(char == S)) then
                     if (trim(lexema) == 'grafica') then
                         numTokens = numTokens + 1
                         print *, "lexema: ", lexema
                         tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
+                        lexema = ''
                         estado = 1
                     elseif (trim(lexema) == 'nombre') then
                         numTokens = numTokens + 1
                         print *, "lexema: ", lexema
+                        is_nombre = .true.
                         tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
+                        lexema = ''
                         estado = 1
                     elseif (trim(lexema) == 'continente') then
                         numTokens = numTokens + 1
                         print *, "lexema: ", lexema
-                        tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
                         is_continente = .true.
+                        tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
+                        lexema = ''
                         estado = 1
-                    elseif (trim(lexema) == 'pais') then
-                        numTokens = numTokens + 1
-                        print *, "lexema: ", lexema
-                        tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
-                        is_pais = .true.
-                        estado = 1
-                    else if (trim(lexema) == 'poblacion') then
-                        numTokens = numTokens + 1
-                        print *, "lexema: ", lexema
-                        tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
-                        estado = 3
-                    else if (trim(lexema) == 'saturacion') then
-                        numTokens = numTokens + 1
-                        print *, "lexema: ", lexema
-                        tokens(numTokens) = Token(lexema, "Palabra reservada", columna_inicio, linea)
-                        estado = 4
-                    else
+                    !elseif (trim(lexema) /= '') then
+                    !    numErrores = numErrores + 1
+                    !    print *, "lexema erroneo: ", lexema
+                    !    errores(numErrores) = ErrorInfo(char, "Token no válido", columna_inicio, linea)
+                    !    estado = 1
+                    end if
+
+                    columna = columna + 1
+                elseif (any(char == S)) then
+                    if (trim(lexema) /= '') then
                         numErrores = numErrores + 1
                         print *, "lexema erroneo: ", lexema
-                        errores(numErrores) = ErrorInfo(char, "Token no válido", columna_inicio, linea)
+                        errores(numErrores) = ErrorInfo(char, "Token no válido", columna, linea)
                         estado = 1
                     end if
-                    
+                    estado = 1
                     columna = columna + 1
                 else
                     numErrores = numErrores + 1
                     columna = columna + 1
-                    print *, "error: ", char
+                    print *, "lexema erroneo: ", lexema
                     errores(numErrores) = ErrorInfo(char, "Caracter no perteneciente al alfabeto del lenguaje", columna, linea)
+                    estado = 0
+                    lexema = ''
                 end if
                 puntero = puntero + 1
-
             case(1)
                 if (any(char == A)) then
-                    numErrores = numErrores + 1
-                    errores(numErrores) = ErrorInfo(char, "Token no válido", columna, linea)
-                    estado = 1
+                    lexema = trim(lexema) // char
+                    estado = 0
                     columna = columna + 1
                 elseif (any(char == S)) then
-                    lexema = ''
                     lexema = trim(lexema) // char
                     if (trim(lexema) == ':') then
                         numTokens = numTokens + 1
+                        print *, "lexema: ", lexema
                         tokens(numTokens) = Token(lexema, "Dos puntos", columna, linea)
+                        lexema = ''
                         estado = 1
-                    elseif (trim(lexema) == '{') then
+                   elseif (trim(lexema) == '{') then
                         numTokens = numTokens + 1
+                        print *, "lexema: ", lexema
                         tokens(numTokens) = Token(lexema, "Llave de apertura", columna, linea)
                         lexema = ''
-                        estado = 0
-                    elseif (trim(lexema) == '"') then
-                        estado = 2
-                    elseif (trim(lexema) == ';') then
+                        estado = 1
+                     elseif (trim(lexema) == '"') then
+                         estado = 2
+                     elseif (trim(lexema) == ';') then
                         numTokens = numTokens + 1
+                        print *, "lexema: ", lexema
                         tokens(numTokens) = Token(lexema, "Punto y coma", columna, linea)
                         lexema = ''
-                        estado = 0
-                    else 
+                        estado = 1
+                    else
                         numErrores = numErrores + 1
-                        print *, "lexema erroneo: ", lexema
                         errores(numErrores) = ErrorInfo(char, "Token no válido", columna, linea)
                         estado = 1
                     end if
                     columna = columna + 1
                 else
                     numErrores = numErrores + 1
-                    print *, "error: ", char
                     errores(numErrores) = ErrorInfo(char, "Caracter no perteneciente al alfabeto del lenguaje", columna, linea)
                     columna = columna + 1
                     estado = 1
@@ -194,13 +187,15 @@ program main
                     tokens(numTokens) = Token(lexema, "Cadena de texto", columna, linea)
                     print *, "lexema: ", lexema
                     if (is_continente) then
-                        nombre_continente = trim(lexema)
-                        is_continente = .false.
+                        nombre_continente = trim(lexema(2:len_trim(lexema)-1))
+                        print *, "nombre continente: ", nombre_continente
                     end if
                     if (is_pais) then
-                        nombre_pais = trim(lexema)
-                        is_pais = .false.
+                        nombre_pais = lexema(2:len_trim(lexema)-1)
+                        print *, "nombre pais: ", nombre_pais
                     end if
+                    lexema = ''
+                    is_nombre = .false.
                     estado = 1
                     columna = columna + 1
                 else
@@ -208,41 +203,19 @@ program main
                 end if
                 puntero = puntero + 1
             case(3)
-                if (any(ichar(char) - ichar('0') == N)) then
-                    lexema = trim(lexema) // char
-                    columna = columna + 1
-                elseif (any(char == S)) then
-                    numTokens = numTokens + 1
-                    tokens(numTokens) = Token(lexema, "Numero", columna, linea)
-                    print *, "lexema: ", lexema
-                    poblacion = atoi(lexema)
-                    estado = 1
-                    columna = columna + 1
-                else
-                    numErrores = numErrores + 1
-                    errores(numErrores) = ErrorInfo(char, "Token no válido", columna, linea)
-                    estado = 1
-                    columna = columna + 1
-                end if
-                puntero = puntero + 1
-            
+
+            case(4)
+
             end select
-                    
+
         end if
-
     end do
-
-
-
     if (numErrores > 0) then
         call generar_html_errores(numErrores, errores)
       else
           print *, "No hay errores en el codigo."
     end if
-
-
 contains
-
 ! Subrutina para convertir entero a cadena de texto
 subroutine generar_html_errores(numErrores, errores)
     implicit none
@@ -250,9 +223,7 @@ subroutine generar_html_errores(numErrores, errores)
     type(ErrorInfo), intent(in) :: errores(numErrores)
     character(len=100000) :: html_content
     character(len=100) :: str_descripcion, str_columna, str_linea,char_error
-
     integer :: file_unit, ios, i
-
     ! Si hay errores, se crea el archivo HTML
    if (numErrores > 0) then
 ! Abrir el archivo para escribir
@@ -268,25 +239,21 @@ subroutine generar_html_errores(numErrores, errores)
             write(file_unit, '(A)') 'td, th { border: 1px solid #dddddd; text-align: left; padding: 8px; }' // new_line('a')
             write(file_unit, '(A)') 'tr:nth-child(even) { background-color: #f2f2f2; }' // new_line('a')
             write(file_unit, '(A)') '</style></head><body><h2>Tabla de Errores</h2>' // new_line('a')
-            write(file_unit, '(A)') '<table><tr><th>Carácter</th><th>Descripcion' 
+            write(file_unit, '(A)') '<table><tr><th>Carácter</th><th>Descripcion'
             write(file_unit, '(A)') '</th><th>Columna</th><th>Línea</th></tr>' // new_line('a')
-
             ! Bucle para formatear cada código ASCII y cada columna
-
             ! Bucle para agregar filas a la tabla
             do i = 1, numErrores
                 write(str_descripcion, '(A)') trim(errores(i)%descripcion)
                 write(str_columna, '(I0)') errores(i)%columna
                 write(str_linea, '(I0)')  errores(i)%linea
                 write(char_error, '(A)') trim(errores(i)%caracter)
-     
-                ! Escribir cada fila directamente al archivo
 
-                write(file_unit, '(A)') '<tr><td>' // char_error // '</td><td>' // trim(str_descripcion) // & 
+                ! Escribir cada fila directamente al archivo
+                write(file_unit, '(A)') '<tr><td>' // char_error // '</td><td>' // trim(str_descripcion) // &
                 '</td><td>' // trim(str_columna) // '</td><td>'&
                  // trim(str_linea) // '</td></tr>' // new_line('a')
             end do
-
             ! Cerrar la tabla y el HTML
             write(file_unit, '(A)') '</table></body></html>'
             close(file_unit)
@@ -295,21 +262,10 @@ subroutine generar_html_errores(numErrores, errores)
         print *, "No hay errores en el código."
     end if
 end subroutine generar_html_errores
-
 function itoa(num) result(str)
     implicit none
     integer, intent(in) :: num
     character(len=20) :: str
-
     write(str, '(I0)') num  ! Convierte el entero 'num' a cadena
 end function itoa
-
-function atoi(str) result(num)
-    implicit none
-    character(len=*), intent(in) :: str
-    integer :: num
-
-    read(str, *) num  ! Convierte la cadena 'str' a entero
-end function atoi
-
 end program main
