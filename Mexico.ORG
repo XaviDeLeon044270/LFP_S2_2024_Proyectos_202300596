@@ -12,7 +12,7 @@ grafica:{
 		nombre:"Mexico";
 			poblacion: 119713;
 			saturacion:35%;
-			bandera: "C:\banderas\mx.png";
+			bandera: "banderas\mx.png";
 		}
 		pais:{
 		nombre:"Estados unidos";

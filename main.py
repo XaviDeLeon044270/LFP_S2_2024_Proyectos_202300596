@@ -2,7 +2,7 @@ from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, Label, messageb
 import subprocess
 import tkinter as tk
 from pathlib import Path
-
+import os
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"C:\Users\Admin\Desktop\LFP_S2_2024_Proyecto1_202300596\assets\frame0")
@@ -27,23 +27,45 @@ def enviar_datos():
         text=True  # la salida se maneja como texto
     )
 
-    # Procesar la salida para dividirla en partes
     salida = resultado.stdout.strip()
-    partes = salida.split(",")
 
-    if len(partes) == 4:
-        # Mostrar los valores en los Labels correspondientes
+    # Dividir la salida en partes
+    partes = [p.strip() for p in salida.split(",")]
+
+    # Verificar si la salida contiene al menos 1 elemento
+    if len(partes) >= 1:
+        # Mostrar el nombre del país
+        label_nombre.config(text="País seleccionado: " + partes[0])
+
+    # Verificar si la salida contiene al menos 2 elementos
+    if len(partes) >= 2:
+        # Mostrar la población
         label_poblacion.config(text="Población: " + partes[1])
-        label_nombre.config(text="Nombre: " + partes[2])
+
+    # Verificar si la salida contiene al menos 3 elementos
+    if len(partes) >= 3:
+        # Mostrar la imagen en un Label si el camino de la imagen es válido
+        imagen_path = partes[2].strip()
         
-        # Mostrar la imagen en un Label
-        imagen_path = partes[3].strip()
-        imagen = tk.PhotoImage(file=imagen_path)
-        label_bandera.config(image=imagen)
-        label_bandera.image = imagen  # Guardar referencia para evitar que se borre la imagen
+        # Convertir la ruta relativa a una ruta absoluta
+        imagen_path_absoluta = os.path.abspath(imagen_path)
+        
+        try:
+            # Cargar la imagen
+            imagen = PhotoImage(file=imagen_path_absoluta)
+            
+            # Mostrar la imagen en la etiqueta
+            label_bandera.config(image=imagen)
+            
+            # Guardar una referencia a la imagen (necesario para evitar que la imagen sea eliminada por el recolector de basura)
+            label_bandera.image = imagen
+        except Exception as e:
+            print(f"Error al cargar la imagen: {e}")
 
     # Mostrar la salida completa en el área de texto
     entry_1.insert(tk.END, salida + '\n')
+
+
 
 window = Tk()
 
@@ -157,8 +179,7 @@ canvas.create_text(
     font=("Inter", 15 * -1)
 )
 
-import os
-from tkinter import messagebox
+
 
 def select_file():
     filename = filedialog.askopenfilename()
@@ -248,6 +269,11 @@ label_poblacion = Label(window, text="Población:", bg="#6A6DF8", fg="#FFFFFF", 
 label_poblacion.place(x=409.0, y=291.0)
 
 label_bandera = Label(window)
-label_bandera.place(x=881, y=464)
-window.resizable(False, False)
+# Calcular el ancho y alto del rectángulo
+ancho = 659.0 - 409.0
+alto = 443.0 - 316.0
+
+# Colocar la etiqueta en la posición del rectángulo y darle el mismo tamaño
+label_bandera.place(x=409.0, y=316.0, width=ancho, height=alto)
+window.resizable(True, True)
 window.mainloop()
