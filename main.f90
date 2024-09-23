@@ -9,12 +9,12 @@ program main
     character(len=1), dimension(6) :: S
     integer, dimension(10) :: N
     character(len=1) :: char_error
-    character(len=50) :: nombre_continente, nombre_pais
+    character(len=50) :: nombre_grafica, nombre_continente, nombre_pais
     integer :: poblacion
     integer :: saturacion_pais_int, saturacion_continente
     character(len=4) :: saturacion_pais_str
     character(len=100) :: bandera
-    logical :: is_pais, is_continente, is_nombre, is_poblacion, is_saturacion, is_bandera, nuevo_pais, nuevo_continente
+    logical :: is_grafica, is_pais, is_continente, is_nombre, is_poblacion, is_saturacion, is_bandera, nuevo_pais, nuevo_continente
 
     type :: ErrorInfo
         character(len=100) :: caracter  ! caracter
@@ -67,6 +67,7 @@ program main
     suma_saturacion = 0
     contenido = ''
     lexema = ''
+    is_grafica = .false.
     is_pais = .false.
     is_continente = .false.
     is_nombre = .false.
@@ -109,6 +110,7 @@ program main
                     lexema = trim(lexema) // char
                     if (trim(lexema) == 'grafica') then
                         numTokens = numTokens + 1
+                        is_grafica = .true.
                         tokens(numTokens) = Token(lexema, "Palabra reservada", columna-len_trim(lexema)+1, linea)
                         lexema = ''
                         estado = 1
@@ -302,12 +304,7 @@ program main
 
         end if
     end do
-    if (numErrores > 0) then
-        call generar_html_errores(numErrores, errores)
-      else
-        call generar_html_tokens(numTokens, tokens)
-    end if
-    
+
     paisMenorSaturacion = paises(1)
     do i=2, numPaises
         if (paises(i)%saturacion_pais_int < paisMenorSaturacion%saturacion_pais_int) then
@@ -315,9 +312,18 @@ program main
         end if
     end do
 
-    print *, trim(paisMenorSaturacion%nombre_pais)
-    print *, trim(adjustl(itoa(paisMenorSaturacion%poblacion)))
-    print *, trim(paisMenorSaturacion%bandera)
+    if (numErrores > 0) then
+        call generar_html_errores(numErrores, errores)
+      else
+        call generar_html_tokens(numTokens, tokens)
+        print *, trim(paisMenorSaturacion%nombre_pais)
+        print *, trim(adjustl(itoa(paisMenorSaturacion%poblacion)))
+        print *, trim(paisMenorSaturacion%bandera)
+    end if
+    
+    
+
+    
 
 contains
 

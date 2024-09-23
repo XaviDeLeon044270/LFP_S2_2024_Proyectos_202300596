@@ -5,7 +5,7 @@ from pathlib import Path
 import os
 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"C:\Users\Admin\Desktop\LFP_S2_2024_Proyecto1_202300596\assets\frame0")
+ASSETS_PATH = OUTPUT_PATH / Path (r"C:\Users\Admin\Desktop\LFP_S2_2024_Proyecto1_202300596\assets\frame0")
 
 
 def relative_to_assets(path: str) -> Path:
@@ -16,21 +16,30 @@ def enviar_datos():
     dato = entry_1.get("1.0", tk.END)
     
     # Ejecutar el programa Fortran y enviar el dato
-    comando = subprocess.run(
+    resultado = subprocess.run(
         ["gfortran", "-o", "main.exe", "main.f90"],
         check=True  # Asegurarse de que la salida se maneje como texto
     )
     resultado = subprocess.run(
         ["./main.exe"],  # Ejecutable de Fortran
         input=dato,  # la data que se manda a Fortran
-        stdout=subprocess.PIPE,  # la data que viene de Fortran   
+        stdout=subprocess.PIPE,  # la data que viene de Fortran
+        stderr=subprocess.PIPE,
         text=True  # la salida se maneja como texto
-    )
+    )   
 
     salida = resultado.stdout.strip()
+    
+    print(resultado.stderr)
 
-    # Dividir la salida en partes
-    partes = [p.strip() for p in salida.split(",")]
+    # Dividir la salida en partes usando saltos de línea como delimitadores
+    partes = salida.split("\n")
+
+    # Eliminar espacios en blanco alrededor de cada parte
+    partes = [parte.strip() for parte in partes]
+    
+    print(partes)
+
 
     # Verificar si la salida contiene al menos 1 elemento
     if len(partes) >= 1:
@@ -44,28 +53,24 @@ def enviar_datos():
 
     # Verificar si la salida contiene al menos 3 elementos
     if len(partes) >= 3:
-        # Mostrar la imagen en un Label si el camino de la imagen es válido
-        imagen_path = partes[2].strip()
-        
-        # Convertir la ruta relativa a una ruta absoluta
+        imagen_path = partes[2].strip('"')
+        print(f"Imagen: {imagen_path}")
         imagen_path_absoluta = os.path.abspath(imagen_path)
+        print(f"Ruta de la imagen: {imagen_path}")  # Verificar la ruta
+
+        if os.path.exists(imagen_path_absoluta):  # <- Añadir aquí para ver si el archivo existe
+            print("El archivo de imagen existe")
+        else:
+            print("El archivo de imagen no existe")
         
         try:
             # Cargar la imagen
             imagen = PhotoImage(file=imagen_path_absoluta)
-            
-            # Mostrar la imagen en la etiqueta
             label_bandera.config(image=imagen)
-            
-            # Guardar una referencia a la imagen (necesario para evitar que la imagen sea eliminada por el recolector de basura)
             label_bandera.image = imagen
         except Exception as e:
             print(f"Error al cargar la imagen: {e}")
-
-    # Mostrar la salida completa en el área de texto
-    entry_1.insert(tk.END, salida + '\n')
-
-
+            
 
 window = Tk()
 
