@@ -3,14 +3,16 @@
 Contenedor contLogin; 
 
 Etiqueta user;
-Etiqueta password;
+Etiqueta password; // etiqueta
 
 Boton btnLogin;
-
 Controles -->
 
 <!--propiedades
-
+/*
+area de propiedades
+comentario nuevo
+*/
 contlogin.setAncho(190); 
 contlogin.setAlto(150); 
 contlogin.setColorFondo(47,79,79);
@@ -30,7 +32,7 @@ btnLogin.setTexto("Ingresar");
 
 propiedades -->
 
-<!--Colocación
+<!--Colocacion
 
 contLogin.setPosicion(586,110);
 
@@ -44,4 +46,4 @@ contLogin.add(btnLogin);
 
 this.add(contLogin);
 
-Colocación -->
+Colocacion -->
